@@ -23,6 +23,7 @@ class GPTResearcher:
         report_type: str = ReportType.ResearchReport.value,
         report_source=ReportSource.Web.value,
         source_urls=None,
+        web_search_queries=None,
         documents=None,
         config_path=None,
         websocket=None,
@@ -59,6 +60,7 @@ class GPTResearcher:
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = context
         self.source_urls = source_urls
+        self.web_search_queries = web_search_queries
         self.documents = documents
         self.memory = Memory(self.cfg.embedding_provider)
         self.visited_urls: set[str] = visited_urls
@@ -89,14 +91,16 @@ class GPTResearcher:
         if not (self.agent and self.role):
             self.agent, self.role = await choose_agent(query=self.query, cfg=self.cfg,
                                                        parent_query=self.parent_query, cost_callback=self.add_costs)
-
         if self.verbose:
             await stream_output("logs", self.agent, self.websocket)
 
         # If specified, the researcher will use the given urls as the context for the research.
         if self.source_urls:
             self.context = await self.__get_context_by_urls(self.source_urls)
-            
+        
+        if self.web_search_queries:
+            self.context = await self.__get_context_by_search_queries(self.web_search_queries)
+
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
             self.context = await self.__get_context_by_search(self.query, document_data)
@@ -115,7 +119,7 @@ class GPTResearcher:
 
         return self.context
 
-    async def write_report(self, existing_headers: list = []):
+    async def write_report(self, existing_headers: list = [], stream=True):
         """
         Writes the report based on research conducted
 
@@ -136,7 +140,9 @@ class GPTResearcher:
                 report_type=self.report_type,
                 report_source=self.report_source,
                 websocket=self.websocket,
-                cfg=self.cfg
+                cfg=self.cfg,
+                cost_callback=self.add_costs,
+                stream=stream,
             )
         elif self.report_type == "subtopic_report":
             report = await generate_report(
@@ -149,7 +155,8 @@ class GPTResearcher:
                 cfg=self.cfg,
                 main_topic=self.parent_query,
                 existing_headers=existing_headers,
-                cost_callback=self.add_costs
+                cost_callback=self.add_costs,
+                stream=stream,
             )
         else:
             report = await generate_report(
@@ -160,8 +167,14 @@ class GPTResearcher:
                 report_source=self.report_source,
                 websocket=self.websocket,
                 cfg=self.cfg,
-                cost_callback=self.add_costs
+                cost_callback=self.add_costs,
+                stream=stream,
             )
+
+
+        time.sleep(2)
+        if self.verbose:
+            await stream_output("logs", f"Finalized write report step.\n💸 Total Research + report Costs: ${self.get_costs()}", self.websocket)
 
         return report
 
@@ -203,6 +216,26 @@ class GPTResearcher:
         # Using asyncio.gather to process the sub_queries asynchronously
         context = await asyncio.gather(*[self.__process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
         return context
+    
+    async def __get_context_by_search_queries(self, search_queries, scraped_data: list = []):
+        """
+           Generates the context for the research task by defined list of search queries and scraping the results
+        Returns:
+            context: List of context
+        """
+        context = []
+        # Generate Sub-Queries including original query
+        sub_queries = search_queries
+
+        if self.verbose:
+            await stream_output("logs",
+                                f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
+                                self.websocket)
+
+        # Using asyncio.gather to process the sub_queries asynchronously
+        context = await asyncio.gather(*[self.__process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
+        return context
+    
 
     async def __process_sub_query(self, sub_query: str, scraped_data: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context.
@@ -221,6 +254,9 @@ class GPTResearcher:
             scraped_data = await self.__scrape_data_by_query(sub_query)
 
         content = await self.__get_similar_content_by_query(sub_query, scraped_data)
+        
+        if not content or content == '':
+            raise Exception(f"No content found for '{sub_query}'... likely scraping blocked!")
 
         if content and self.verbose:
             await stream_output("logs", f"📃 {content}", self.websocket)

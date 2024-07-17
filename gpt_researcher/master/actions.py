@@ -312,6 +312,7 @@ async def generate_report(
     main_topic: str = "",
     existing_headers: list = [],
     cost_callback: callable = None,
+    stream: bool = True,
 ):
     """
     generates the final report
@@ -347,7 +348,7 @@ async def generate_report(
             ],
             temperature=0,
             llm_provider=cfg.llm_provider,
-            stream=True,
+            stream=stream,
             websocket=websocket,
             max_tokens=cfg.smart_token_limit,
             llm_kwargs=cfg.llm_kwargs,
