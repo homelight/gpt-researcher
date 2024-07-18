@@ -24,10 +24,15 @@ class BeautifulSoupScraper:
                 response.content, "lxml", from_encoding=response.encoding
             )
 
+            # # write to file for debugging
+            # with open(f"/var/tmp/{self.link.replace('/', '-')}.html", "w") as file:
+            #     file.write(str(soup))
+
             for script_or_style in soup(["script", "style"]):
                 script_or_style.extract()
 
             raw_content = self.get_content_from_url(soup)
+
             lines = (line.strip() for line in raw_content.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             content = "\n".join(chunk for chunk in chunks if chunk)
@@ -47,7 +52,12 @@ class BeautifulSoupScraper:
             str: The text from the soup
         """
         text = ""
-        tags = ["p", "h1", "h2", "h3", "h4", "h5"]
+        tags = ["p", "h1", "h2", "h3", "h4", "h5", 
+                # only headers and paragraphs are missing too much info
+                # specifically zillow / redfin, etc has a lot of formatting, not in paragraphs
+                # adding span, strong, etc to get more text (though still not complete)
+                "span", "strong", 
+                ]
         for element in soup.find_all(tags):  # Find all the <p> elements
             text += element.text + "\n"
         return text

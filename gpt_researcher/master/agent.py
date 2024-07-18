@@ -204,9 +204,11 @@ class GPTResearcher:
                                             cfg=self.cfg, parent_query=self.parent_query,
                                             report_type=self.report_type, cost_callback=self.add_costs)
 
-        # If this is not part of a sub researcher, add original query to research for better results
-        if self.report_type != "subtopic_report":
-            sub_queries.append(query)
+        # # If this is not part of a sub researcher, add original query to research for better results
+        # # NOTE: this seems like a bad idea - the original query is likely too long and 
+        # # will not yield good search results
+        # if self.report_type != "subtopic_report":
+        #     sub_queries.append(query)
 
         if self.verbose:
             await stream_output("logs",
@@ -255,9 +257,6 @@ class GPTResearcher:
 
         content = await self.__get_similar_content_by_query(sub_query, scraped_data)
         
-        if not content or content == '':
-            raise Exception(f"No content found for '{sub_query}'... likely scraping blocked!")
-
         if content and self.verbose:
             await stream_output("logs", f"📃 {content}", self.websocket)
         elif self.verbose:
