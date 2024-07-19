@@ -56,7 +56,7 @@ class BeautifulSoupScraper:
                 # only headers and paragraphs are missing too much info
                 # specifically zillow / redfin, etc has a lot of formatting, not in paragraphs
                 # adding span, strong, etc to get more text (though still not complete)
-                "span", "strong", 
+                # "span", "strong", 
                 ]
         for element in soup.find_all(tags):  # Find all the <p> elements
             text += element.text + "\n"

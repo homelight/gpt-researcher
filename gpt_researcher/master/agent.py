@@ -252,10 +252,18 @@ class GPTResearcher:
         if self.verbose:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
 
+        search_result = []
         if not scraped_data:
-            scraped_data = await self.__scrape_data_by_query(sub_query)
+            scraped_data, search_result = await self.__scrape_data_by_query(sub_query)
 
-        content = await self.__get_similar_content_by_query(sub_query, scraped_data)
+        search_result = [
+            "Source: " + row.get("href") + "\n" + "Title: " + row.get("title") + "\n" + "Content: " + row.get("body") + "\n"
+            for row in search_result
+        ]
+        search_result_content = "\n".join(search_result)
+        scraped_content = await self.__get_similar_content_by_query(sub_query, scraped_data)
+
+        content = search_result_content + scraped_content
         
         if content and self.verbose:
             await stream_output("logs", f"📃 {content}", self.websocket)
@@ -292,6 +300,7 @@ class GPTResearcher:
         retriever = self.retriever(sub_query)
         search_results = retriever.search(
             max_results=self.cfg.max_search_results_per_query)
+        
         new_search_urls = await self.__get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
@@ -300,7 +309,8 @@ class GPTResearcher:
 
         # Scrape Urls
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
-        return scraped_content_results
+
+        return scraped_content_results, search_results
 
     async def __get_similar_content_by_query(self, query, pages):
         if self.verbose:

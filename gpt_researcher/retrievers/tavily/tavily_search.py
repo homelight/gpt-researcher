@@ -48,7 +48,7 @@ class TavilySearch():
             if not sources:
                 raise Exception("No results found with Tavily API search.")
             # Return the results
-            search_response = [{"href": obj["url"], "body": obj["content"]} for obj in sources]
+            search_response = [{"href": obj["url"], "body": obj["content"], "title": obj["title"]} for obj in sources]
         except Exception as e: # Fallback in case overload on Tavily Search API
             print(f"Error: {e}. Fallback to DuckDuckGo Search API...")
             try:
