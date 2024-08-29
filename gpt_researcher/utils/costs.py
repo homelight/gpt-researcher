@@ -2,8 +2,8 @@ import tiktoken
 
 # Per OpenAI Pricing Page: https://openai.com/api/pricing/
 ENCODING_MODEL = "o200k_base"
-INPUT_COST_PER_TOKEN = 0.000005
-OUTPUT_COST_PER_TOKEN = 0.000015
+INPUT_COST_PER_TOKEN = 0.00000015
+OUTPUT_COST_PER_TOKEN = 0.0000006
 IMAGE_INFERENCE_COST = 0.003825
 EMBEDDING_COST = 0.02 / 1000000 # Assumes new ada-3-small
 
