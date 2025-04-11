@@ -108,12 +108,6 @@ class BrightDataSearch:
             logger.info(f"BrightData search returned {len(results)} results")
 
 
-            #CHANGE THIS TO RETURN A LIST OF DICTIONARIES WITH RESULTS
-            # return {
-            #     'results': results,
-            #     'query': self.query,
-            #     'search_engine': 'brightdata'
-            # }
             return results, err_msg
             
         except Exception as e:
