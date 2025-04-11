@@ -59,16 +59,19 @@ class BingSearch():
         }
         
         resp = requests.get(url, headers=headers, params=params)
-
+        err_msg = ""
         # Preprocess the results
-        if resp is None:
-            return
+        if resp is None:    
+            err_msg = "Bing search returned None"
+            return [], err_msg
         try:
             search_results = json.loads(resp.text)
         except Exception:
-            return
+            err_msg = "Bing search did not return a valid JSON response"
+            return [], err_msg
         if search_results is None:
-            return
+            err_msg = "Bing search returned an empty response"
+            return [], err_msg
 
         results = search_results["webPages"]["value"]
         search_results = []
@@ -85,4 +88,4 @@ class BingSearch():
             }
             search_results.append(search_result)
 
-        return search_results
+        return search_results, err_msg

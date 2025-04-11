@@ -48,6 +48,7 @@ class ExaSearch:
         Returns:
             A list of search results.
         """
+        err_msg = ""
         results = self.client.search(
             self.query,
             type=search_type,
@@ -55,11 +56,10 @@ class ExaSearch:
             num_results=max_results,
             **filters
         )
-
         search_response = [
             {"href": result.url, "body": result.text} for result in results.results
         ]
-        return search_response
+        return search_response, err_msg
 
     def find_similar(self, url, exclude_source_domain=False, **filters):
         """

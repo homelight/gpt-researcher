@@ -28,6 +28,7 @@ class ArxivSearch:
         )))
 
         search_result = []
+        err_msg = ""
 
         for result in arxiv_gen:
 
@@ -37,4 +38,4 @@ class ArxivSearch:
                 "body": result.summary,
             })
         
-        return search_result
+        return search_result, err_msg

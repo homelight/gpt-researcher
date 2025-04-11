@@ -50,6 +50,7 @@ class SerpApiSearch():
         }
         encoded_url = url + "?" + urllib.parse.urlencode(params)
         search_response = []
+        err_msg = ""
         try:
             response = requests.get(encoded_url, timeout=10)
             if response.status_code == 200:
@@ -71,7 +72,8 @@ class SerpApiSearch():
                         results_processed += 1    
         except Exception as e: # Fallback in case overload on Tavily Search API
             print(f"Error: {e}")
+            err_msg = f"Error: {e}"
             ddg = DDGS()
             search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
 
-        return search_response
+        return search_response, err_msg

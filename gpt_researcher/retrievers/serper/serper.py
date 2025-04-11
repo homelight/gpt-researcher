@@ -44,6 +44,7 @@ class SerperSearch():
 
         # Search the query (see https://serper.dev/playground for the format)
         url = "https://google.serper.dev/search"
+        err_msg = ""
 
         headers = {
         'X-API-KEY': self.api_key,
@@ -55,13 +56,16 @@ class SerperSearch():
 
         # Preprocess the results
         if resp is None:
-            return
+            err_msg = "Serper search returned None"
+            return [], err_msg
         try:
             search_results = json.loads(resp.text)
         except Exception:
-            return
+            err_msg = "Serper search did not return a valid JSON response"
+            return [], err_msg
         if search_results is None:
-            return
+            err_msg = "Serper search returned an empty JSON response"
+            return [], err_msg
 
         results = search_results["organic"]
         search_results = []
@@ -78,4 +82,4 @@ class SerperSearch():
             }
             search_results.append(search_result)
 
-        return search_results
+        return search_results, err_msg

@@ -60,15 +60,19 @@ class GoogleSearch:
         print("Searching with query {0}...".format(self.query))
         url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={self.query}&start=1"
         resp = requests.get(url)
-
+        err_msg = ""
+        
         if resp is None:
-            return
+            err_msg = "Google search returned None"
+            return [], err_msg
         try:
             search_results = json.loads(resp.text)
         except Exception:
-            return
+            err_msg = "Google search did not return a valid JSON response"
+            return [], err_msg
         if search_results is None:
-            return
+            err_msg = "Google search returned an empty JSON response"
+            return [], err_msg
 
         results = search_results.get("items", [])
         search_results = []
@@ -85,4 +89,4 @@ class GoogleSearch:
             }
             search_results.append(search_result)
 
-        return search_results
+        return search_results, err_msg

@@ -42,6 +42,7 @@ class SearxSearch():
         """
         searx = SearxSearchWrapper(searx_host=os.environ["SEARX_URL"])
         results = searx.results(self.query, max_results)
+        err_msg = ""
         # Normalizing results to match the format of the other search APIs
         search_response = [{"href": obj["link"], "body": obj["snippet"]} for obj in results]
-        return search_response
+        return search_response, err_msg 
