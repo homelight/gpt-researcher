@@ -17,5 +17,6 @@ class Duckduckgo:
         :param max_results:
         :return:
         """
+        err_msg = ""
         ddgs_gen = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
-        return ddgs_gen
+        return ddgs_gen, err_msg

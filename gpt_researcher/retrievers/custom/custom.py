@@ -43,10 +43,12 @@ class CustomRetriever:
               }
             ]
         """
+        err_msg = ""
         try:
             response = requests.get(self.endpoint, params={**self.params, 'query': self.query})
             response.raise_for_status()
-            return response.json()
+            return response.json(), err_msg
         except requests.RequestException as e:
-            print(f"Failed to retrieve search results: {e}")
-            return None
+            err_msg = f"Failed to retrieve search results: {e}"
+            print(err_msg)
+            return [], err_msg

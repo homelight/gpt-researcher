@@ -10,6 +10,7 @@ from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.llm import *
 
 
+
 def get_retriever(retriever):
     """
     Gets the retriever
@@ -52,6 +53,9 @@ def get_retriever(retriever):
             from gpt_researcher.retrievers import TavilySearch
 
             retriever = TavilySearch
+        case "brightdata":
+            from gpt_researcher.retrievers import BrightDataSearch
+            retriever = BrightDataSearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 

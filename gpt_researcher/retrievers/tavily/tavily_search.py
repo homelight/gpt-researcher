@@ -41,6 +41,7 @@ class TavilySearch():
         Returns:
 
         """
+        err_msg = ""
         try:
             # Search the query
             results = self.client.search(self.query, search_depth="basic", max_results=max_results, topic=self.topic)
@@ -50,11 +51,14 @@ class TavilySearch():
             # Return the results
             search_response = [{"href": obj["url"], "body": obj["content"], "title": obj["title"]} for obj in sources]
         except Exception as e: # Fallback in case overload on Tavily Search API
-            print(f"Error: {e}. Fallback to DuckDuckGo Search API...")
+            err_msg = f"Error: {e}. Fallback to DuckDuckGo Search API..."
+            print(err_msg)
             try:
                 ddg = DDGS()
                 search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
             except Exception as e:
-                print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
+                err_msg = f"Error: {e}. Failed fetching sources. Resulting in empty response."
+                print(err_msg)
                 search_response = []
-        return search_response
+                
+        return search_response, err_msg

@@ -1,5 +1,7 @@
 import asyncio
 import time
+import hashlib
+
 
 from gpt_researcher.config import Config
 from gpt_researcher.context.compression import ContextCompressor
@@ -9,7 +11,10 @@ from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType
 
+from gpt_researcher.master.logging import log_data_to_redshift
+
 import sys
+
 
 
 class GPTResearcher:
@@ -57,7 +62,7 @@ class GPTResearcher:
         self.report_source: str = report_source
         self.research_costs: float = 0.0
         self.cfg = Config(config_path)
-        self.retriever = get_retriever(self.cfg.retriever)
+        self.retriever = get_retriever(self.cfg.retriever) #we store the retiever class object. It is not instantiated here.
         self.context = context
         self.source_urls = source_urls
         self.web_search_queries = web_search_queries
@@ -255,7 +260,7 @@ class GPTResearcher:
         search_result = []
         if not scraped_data:
             scraped_data, search_result = await self.__scrape_data_by_query(sub_query)
-
+        
         search_result = [
             "Source: " + row.get("href") + "\n" + "Title: " + row.get("title") + "\n" + "Content: " + row.get("body") + "\n"
             for row in search_result
@@ -297,12 +302,35 @@ class GPTResearcher:
             Summary
         """
         # Get Urls
-        retriever = self.retriever(sub_query)
-        search_results = retriever.search(
+        retriever = self.retriever(sub_query) #we instantiate the retriever class here. We pass the query to the retriever class.
+        search_results, err_msg = retriever.search(
             max_results=self.cfg.max_search_results_per_query)
         
-        new_search_urls = await self.__get_new_urls([url.get("href") for url in search_results])
+        #log the search information
+        if len(err_msg) == 0:
+            log_data_to_redshift({
+                "vendor_name": self.cfg.retriever,
+                "api_name": "search",
+                "app_name": "gpt-researcher",
+                "event_count": 1,
+                "reference_id_type": "query_hash", 
+                "reference_id": hashlib.sha256(self.query.encode()).hexdigest(),
+                "status": "success",
+                "hit_cache": False,
+            })
+        else:
+            log_data_to_redshift({
+                "vendor_name": self.cfg.retriever,
+                "api_name": "search",
+                "app_name": "gpt-researcher",
+                "event_count": 1,
+                "reference_id_type": "query_hash", 
+                "reference_id": hashlib.sha256(self.query.encode()).hexdigest(),
+                "status": f"error - {err_msg}",
+                "hit_cache": False,
+            })
 
+        new_search_urls = await self.__get_new_urls([url.get("href") for url in search_results])
         # Scrape Urls
         if self.verbose:
             await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
