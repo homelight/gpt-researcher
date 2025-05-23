@@ -76,8 +76,10 @@ class BrightDataSearch:
             # logger.info(f"Sending BrightData search request for query: {self.query}")
             response = requests.post(self.base_url, headers=headers, json=payload)
             if 'error' in response.text.lower():
-                # logger.error(f"BrightData search error: {response.text}")
-                raise Exception(f"BrightData search error: {response.text}")
+                if response.status_code != 200 and "No results for query" not in response.text:
+                    raise Exception(f"BrightData search error: {response.text}")
+                else:
+                    logger.info(f"BrightData search issue, not an error: {response.text}")
             response.raise_for_status()
             
             # Parse the response
@@ -112,7 +114,6 @@ class BrightDataSearch:
             
         except Exception as e:
             # logger.error(f"Error in BrightData search: {str(e)}")
-            print(f"Error in BrightData search: {str(e)}")
             logger.info(f"BrightData search had the following error: {str(e)}")
 
             return [], str(e)
