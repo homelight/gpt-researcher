@@ -104,8 +104,7 @@ class BrightDataSearch:
             
             if len(results) == 0:
                 err_msg = f"BrightData search returned No results for query: {self.query}"
-                logger.error(err_msg)
-                raise Exception(err_msg)
+                logger.info(err_msg)
             
             logger.info(f"BrightData search returned {len(results)} results")
 
