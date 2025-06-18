@@ -112,7 +112,5 @@ class BrightDataSearch:
             return results, err_msg
             
         except Exception as e:
-            # logger.error(f"Error in BrightData search: {str(e)}")
-            logger.info(f"BrightData search had the following error: {str(e)}")
-
-            return [], str(e)
+            logger.error(f"Error in BrightData search: {str(e)}")
+            raise e
