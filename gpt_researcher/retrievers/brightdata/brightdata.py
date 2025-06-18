@@ -113,5 +113,4 @@ class BrightDataSearch:
             
         except Exception as e:
             logger.error(f"Error in BrightData search: {str(e)}")
-
-            return [], str(e)
+            raise e
